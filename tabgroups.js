@@ -116,7 +116,6 @@ function addTabToGroup(tab, groupName, groupColor) {
   chrome.tabGroups.query({
     title: groupName,
     color: groupColor,
-    windowId: tab.windowId,
   }, (groups) => {
     if (groups.length > 0) {
       // The group exists, put the tab into it
@@ -124,6 +123,14 @@ function addTabToGroup(tab, groupName, groupColor) {
         groupId: groups[0].id,
         tabIds: tab.id,
       });
+      // If the active tab is grouped into another window we need to focus it
+      if (tab.active) {
+        // Make it the active tab in its window
+        chrome.tabs.update(tab.id, { active: true }, (tab) => {
+          // Focus the window the tab was grouped in
+          chrome.windows.update(tab.windowId, { focused: true })
+        })
+      }
     } else {
       // We need to make a new group
       chrome.tabs.group({
